@@ -1,0 +1,13 @@
+[Figure]
+default = "Dot"
+[Figure.variants]
+Rectangle = "rect"
+Circle    = "circle"
+Dot       = "dot"
+
+[FigureInfo]
+constraint = "Figure"
+[FigureInfo.Variants]
+Rectangle = "RectangleData"
+Circle    = "int"
+Dot       = "null"
