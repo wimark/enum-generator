@@ -76,7 +76,10 @@ const ENUM_SETTER_CASE string = `
 		*self = %type%name
 		return nil`
 const ENUM_SETTER_DEFAULT string = `
-	if len(*self) == 0 { *self = %type%name }`
+	if len(s) == 0 {
+		*self = %type%name
+		return nil
+	}`
 const ENUM_SETTER_FOOTER string = `
 	}%defaultcode
 	return errors.New("Unknown %type")
