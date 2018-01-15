@@ -220,9 +220,6 @@ func generateEnumFunction(name string, values sort.StringSlice, enum_info EnumIn
 
 	for _, var_name := range values {
 		var value = enum_info.Variants[var_name]
-		if len(value) == 0 {
-			value = var_name
-		}
 		code += replacer(templates["case"],
 			ReplaceMap{"%name": var_name, "%type": name, "%value": value})
 	}
