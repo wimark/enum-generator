@@ -131,7 +131,7 @@ const ASSOC_UNMARSHAL_CASE string = `
 		self.Data = &d`
 const ASSOC_SETTER_CASE_NULL string = `
 	case %constr%name:
-		break`
+		self.Data = nil`
 const ASSOC_SETTER_FOOTER string = `
 	}
 	self.Type = t
