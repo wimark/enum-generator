@@ -42,7 +42,7 @@ const ENUM_STRING_DEFAULT string = `
 	if len(*self) == 0 { return "%value" }`
 const ENUM_STRING_FOOTER string = `
 	}%defaultcode
-	panic(errors.New("Invalid value of %type"))
+	panic(errors.New("Invalid value of %type: "+string(*self)))
 }`
 const ENUM_MARSHAL_HEADER string = `
 func (self *%type) MarshalJSON() ([]byte, error) {
@@ -54,7 +54,7 @@ const ENUM_MARSHAL_DEFAULT string = `
 	if len(*self) == 0 { return json.Marshal("%value") }`
 const ENUM_GETTER_FOOTER string = `
 	}%defaultcode
-	return nil, errors.New("Invalid value of %type")
+	return nil, errors.New("Invalid value of %type: "+string(*self))
 }`
 const ENUM_GETBSON_HEADER string = `
 func (self *%type) GetBSON() (interface{}, error) {
@@ -82,7 +82,7 @@ const ENUM_SETTER_DEFAULT string = `
 	}`
 const ENUM_SETTER_FOOTER string = `
 	}%defaultcode
-	return errors.New("Unknown %type")
+	return errors.New("Unknown %type: "+s)
 }`
 const ENUM_SETBSON_HEADER string = `
 func (self *%type) SetBSON(v bson.Raw) error {
