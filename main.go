@@ -189,7 +189,7 @@ func generateHeader(pkgname string, enable_json, enable_bson, has_assoc bool) st
 		packages = append(packages, `"encoding/json"`)
 	}
 	if enable_bson {
-		packages = append(packages, `"gopkg.in/mgo.v2/bson"`)
+		packages = append(packages, `"github.com/globalsign/mgo/bson"`)
 	}
 	if has_assoc && (enable_bson || enable_json) {
 		packages = append(packages, `"bytes"`)
