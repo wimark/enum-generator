@@ -33,16 +33,16 @@ const %type%name %type = "%value"`
 const ENUM_GETPTR string = `
 func (self %type) GetPtr() *%type { var v = self; return &v; }`
 const ENUM_STRING_HEADER string = `
-func (self *%type) String() string {
-	switch *self {`
+func (self %type) String() string {
+	switch self {`
 const ENUM_STRING_CASE string = `
 	case %type%name:
 		return "%value"`
 const ENUM_STRING_DEFAULT string = `
-	if len(*self) == 0 { return "%value" }`
+	if len(self) == 0 { return "%value" }`
 const ENUM_STRING_FOOTER string = `
 	}%defaultcode
-	panic(errors.New("Invalid value of %type: "+string(*self)))
+	panic(errors.New("Invalid value of %type: "+string(self)))
 }`
 const ENUM_MARSHAL_HEADER string = `
 func (self *%type) MarshalJSON() ([]byte, error) {
