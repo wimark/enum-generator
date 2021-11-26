@@ -31,41 +31,41 @@ type %type string`
 const ENUM_VALUES string = `
 const %type%name %type = "%value"`
 const ENUM_GETPTR string = `
-func (self %type) GetPtr() *%type { var v = self; return &v; }`
+func (en %type) GetPtr() *%type { var v = en; return &v; }`
 const ENUM_STRING_HEADER string = `
-func (self %type) String() string {
-	switch self {`
+func (en %type) String() string {
+	switch en {`
 const ENUM_STRING_CASE string = `
 	case %type%name:
 		return "%value"`
 const ENUM_STRING_DEFAULT string = `
-	if len(self) == 0 { return "%value" }`
+	if len(en) == 0 { return "%value" }`
 const ENUM_STRING_FOOTER string = `
 	}%defaultcode
-	panic(errors.New("Invalid value of %type: "+string(self)))
+	panic(errors.New("Invalid value of %type: "+string(en)))
 }`
 const ENUM_MARSHAL_HEADER string = `
-func (self *%type) MarshalJSON() ([]byte, error) {
-	switch *self {`
+func (en *%type) MarshalJSON() ([]byte, error) {
+	switch *en {`
 const ENUM_MARSHAL_CASE string = `
 	case %type%name:
 		return json.Marshal("%value")`
 const ENUM_MARSHAL_DEFAULT string = `
-	if len(*self) == 0 { return json.Marshal("%value") }`
+	if len(*en) == 0 { return json.Marshal("%value") }`
 const ENUM_GETTER_FOOTER string = `
 	}%defaultcode
-	return nil, errors.New("Invalid value of %type: "+string(*self))
+	return nil, errors.New("Invalid value of %type: "+string(*en))
 }`
 const ENUM_GETBSON_HEADER string = `
-func (self *%type) GetBSON() (interface{}, error) {
-	switch *self {`
+func (en *%type) GetBSON() (interface{}, error) {
+	switch *en {`
 const ENUM_GETBSON_CASE string = `
 	case %type%name:
 		return "%value", nil`
 const ENUM_GETBSON_DEFAULT string = `
-	if len(*self) == 0 { return "%value", nil }`
+	if len(*en) == 0 { return "%value", nil }`
 const ENUM_UNMARSHAL_HEADER string = `
-func (self *%type) UnmarshalJSON(b []byte) error {
+func (en *%type) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err
@@ -73,11 +73,11 @@ func (self *%type) UnmarshalJSON(b []byte) error {
 	switch s {`
 const ENUM_SETTER_CASE string = `
 	case "%value":
-		*self = %type%name
+		*en = %type%name
 		return nil`
 const ENUM_SETTER_DEFAULT string = `
 	if len(s) == 0 {
-		*self = %type%name
+		*en = %type%name
 		return nil
 	}`
 const ENUM_SETTER_FOOTER string = `
@@ -85,7 +85,7 @@ const ENUM_SETTER_FOOTER string = `
 	return errors.New("Unknown %type: "+s)
 }`
 const ENUM_SETBSON_HEADER string = `
-func (self *%type) SetBSON(v bson.Raw) error {
+func (en *%type) SetBSON(v bson.Raw) error {
 	var s string
 	if err := v.Unmarshal(&s); err != nil {
 		return err
@@ -97,7 +97,7 @@ type %type struct {
 	Data interface{} "json:\"data\""
 }`
 const ASSOC_UNMARSHAL_HEADER string = `
-func (self *%type) UnmarshalJSON(b []byte) error {
+func (en *%type) UnmarshalJSON(b []byte) error {
 	var doc map[string]json.RawMessage
 	if err := json.Unmarshal(b, &doc); err != nil {
 		return err
@@ -128,17 +128,17 @@ const ASSOC_UNMARSHAL_CASE string = `
 		if data_err != nil {
 			return data_err
 		}
-		self.Data = &d`
+		en.Data = &d`
 const ASSOC_SETTER_CASE_NULL string = `
 	case %constr%name:
-		self.Data = nil`
+		en.Data = nil`
 const ASSOC_SETTER_FOOTER string = `
 	}
-	self.Type = t
+	en.Type = t
 	return nil
 }`
 const ASSOC_SETBSON_HEADER string = `
-func (self *%type) SetBSON(v bson.Raw) error {
+func (en *%type) SetBSON(v bson.Raw) error {
 	var in = map[string]bson.Raw{}
 	if err := v.Unmarshal(&in); err != nil {
 		return err
@@ -169,7 +169,7 @@ const ASSOC_SETBSON_CASE string = `
 		if data_err != nil {
 			return data_err
 		}
-		self.Data = &d`
+		en.Data = &d`
 
 type ReplaceMap map[string]string
 type TemplateMap map[string]string
