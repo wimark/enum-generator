@@ -121,7 +121,7 @@ func (en *%type) UnmarshalJSON(b []byte) error {
 const ASSOC_UNMARSHAL_CASE string = `
 	case %constr%name:
 		if !data_found {
-			return errors.New("No associated data found for enum %type")
+			return errors.New("no associated data found for enum %type")
 		}
 		var d %value
 		var data_err = json.Unmarshal(data_raw, &d)
@@ -162,7 +162,7 @@ func (en *%type) SetBSON(v bson.Raw) error {
 const ASSOC_SETBSON_CASE string = `
 	case %constr%name:
 		if !data_found {
-			return errors.New("No associated data found for enum %type")
+			return errors.New("no associated data found for enum %type")
 		}
 		var d %value
 		var data_err = data_raw.Unmarshal(&d)
