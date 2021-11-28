@@ -1,4 +1,4 @@
-# README #
+# enum-generator #
 
 This enum-generator is intended to generate golang source code for string-based enum types and enum types with associated data from description in TOML.
 
@@ -31,3 +31,8 @@ TOML structure sample:
     Rectangle = "RectangleData"
     Circle    = "int"
     "Dot"     = "null"`
+
+
+<hr>
+
+Made in Wimark Systems. 
