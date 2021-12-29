@@ -1,4 +1,4 @@
-module bitbucket.org/wimarksystems/enum-generator
+module github.com/wimark/enum-generator
 
 go 1.13
 
