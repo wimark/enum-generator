@@ -35,4 +35,8 @@ TOML structure sample:
 
 <hr>
 
-Made in Wimark Systems. 
+## Copyright
+
+Made in Wimark Systems
+
+2017-2022
