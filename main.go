@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -84,8 +85,15 @@ const ENUM_SETTER_FOOTER string = `
 	}%defaultcode
 	return errors.New("Unknown %type: "+s)
 }`
-const ENUM_SETBSON_HEADER string = `
+const ENUM_SETBSON_MGO_HEADER string = `
 func (en *%type) SetBSON(v bson.Raw) error {
+	var s string
+	if err := v.Unmarshal(&s); err != nil {
+		return err
+	}
+	switch s {`
+const ENUM_SETBSON_MONGODRIVER_HEADER string = `
+func (en *%type) SetBSON(v bson.RawValue) error {
 	var s string
 	if err := v.Unmarshal(&s); err != nil {
 		return err
@@ -137,9 +145,31 @@ const ASSOC_SETTER_FOOTER string = `
 	en.Type = t
 	return nil
 }`
-const ASSOC_SETBSON_HEADER string = `
+const ASSOC_SETBSON_MGO_HEADER string = `
 func (en *%type) SetBSON(v bson.Raw) error {
 	var in = map[string]bson.Raw{}
+	if err := v.Unmarshal(&in); err != nil {
+		return err
+	}
+	if in == nil {
+		return nil
+	}
+	var t_raw, t_found = in["type"]
+	if !t_found {
+		return nil
+	}
+	var data_raw, data_found = in["data"]
+	if bytes.Equal(data_raw.Data, []byte("null")) {
+		data_found = false
+	}
+	var t %constr
+	if t_err := t_raw.Unmarshal(&t); t_err != nil {
+		return t_err
+	}
+	switch t {`
+const ASSOC_SETBSON_MONGODRIVER_HEADER string = `
+func (en *%type) SetBSON(v bson.RawValue) error {
+	var in = map[string]bson.RawValue{}
 	if err := v.Unmarshal(&in); err != nil {
 		return err
 	}
@@ -183,15 +213,18 @@ func replacer(origin string, replaces ReplaceMap) string {
 	return result
 }
 
-func generateHeader(pkgname string, enable_json, enable_bson, has_assoc bool) string {
+func generateHeader(pkgname, enable_bson string, enable_json, has_assoc bool) string {
 	var packages = []string{}
 	if enable_json {
 		packages = append(packages, `"encoding/json"`)
 	}
-	if enable_bson {
+	if enable_bson == "mgo" {
 		packages = append(packages, `"github.com/globalsign/mgo/bson"`)
 	}
-	if has_assoc && (enable_bson || enable_json) {
+	if enable_bson == "mongodriver" {
+		packages = append(packages, `"go.mongodb.org/mongo-driver/v2/bson"`)
+	}
+	if has_assoc && (enable_json || enable_bson != "") {
 		packages = append(packages, `"bytes"`)
 	}
 	return replacer(HEADER,
@@ -233,7 +266,7 @@ func generateEnumFunction(name string, values sort.StringSlice, enum_info EnumIn
 
 	return code
 }
-func generateEnumType(enum_name string, enum_info EnumInfo, enable_json bool, enable_bson bool) string {
+func generateEnumType(enum_name, enable_bson string, enum_info EnumInfo, enable_json bool) string {
 	var code string
 	var sorted_var_list = sort.StringSlice{}
 	for v := range enum_info.Variants {
@@ -262,7 +295,7 @@ func generateEnumType(enum_name string, enum_info EnumInfo, enable_json bool, en
 				"case":    ENUM_MARSHAL_CASE,
 			})
 	}
-	if enable_bson {
+	if enable_bson != "" {
 		code += generateEnumFunction(enum_name, sorted_var_list, enum_info,
 			TemplateMap{
 				"header":  ENUM_GETBSON_HEADER,
@@ -280,10 +313,19 @@ func generateEnumType(enum_name string, enum_info EnumInfo, enable_json bool, en
 				"case":    ENUM_SETTER_CASE,
 			})
 	}
-	if enable_bson {
+	if enable_bson == "mgo" {
 		code += generateEnumFunction(enum_name, sorted_var_list, enum_info,
 			TemplateMap{
-				"header":  ENUM_SETBSON_HEADER,
+				"header":  ENUM_SETBSON_MGO_HEADER,
+				"footer":  ENUM_SETTER_FOOTER,
+				"default": ENUM_SETTER_DEFAULT,
+				"case":    ENUM_SETTER_CASE,
+			})
+	}
+	if enable_bson == "mongodriver" {
+		code += generateEnumFunction(enum_name, sorted_var_list, enum_info,
+			TemplateMap{
+				"header":  ENUM_SETBSON_MONGODRIVER_HEADER,
 				"footer":  ENUM_SETTER_FOOTER,
 				"default": ENUM_SETTER_DEFAULT,
 				"case":    ENUM_SETTER_CASE,
@@ -320,7 +362,7 @@ func generateAssocEnumFunction(name string, values sort.StringSlice, enum_info E
 	return code
 }
 
-func generateAssocEnumType(enum_name string, enum_info EnumInfo, enable_json bool, enable_bson bool) string {
+func generateAssocEnumType(enum_name string, enum_info EnumInfo, enable_json bool, enable_bson string) string {
 
 	var sorted_var_list = sort.StringSlice{}
 	for v := range enum_info.Variants {
@@ -341,10 +383,19 @@ func generateAssocEnumType(enum_name string, enum_info EnumInfo, enable_json boo
 				"case":      ASSOC_UNMARSHAL_CASE,
 			})
 	}
-	if enable_bson {
+	if enable_bson == "mgo" {
 		code += generateAssocEnumFunction(enum_name, sorted_var_list, enum_info,
 			TemplateMap{
-				"header":    ASSOC_SETBSON_HEADER,
+				"header":    ASSOC_SETBSON_MGO_HEADER,
+				"footer":    ASSOC_SETTER_FOOTER,
+				"case_null": ASSOC_SETTER_CASE_NULL,
+				"case":      ASSOC_SETBSON_CASE,
+			})
+	}
+	if enable_bson == "mongodriver" {
+		code += generateAssocEnumFunction(enum_name, sorted_var_list, enum_info,
+			TemplateMap{
+				"header":    ASSOC_SETBSON_MONGODRIVER_HEADER,
 				"footer":    ASSOC_SETTER_FOOTER,
 				"case_null": ASSOC_SETTER_CASE_NULL,
 				"case":      ASSOC_SETBSON_CASE,
@@ -354,7 +405,7 @@ func generateAssocEnumType(enum_name string, enum_info EnumInfo, enable_json boo
 	return code
 }
 
-func generateEnumCode(m EnumTypeMap, pkg string, enable_json bool, enable_bson bool) string {
+func generateEnumCode(m EnumTypeMap, pkg string, enable_json bool, enable_bson string) string {
 	var code string
 	var has_assoc = false
 	var sorted_list = sort.StringSlice{}
@@ -366,11 +417,11 @@ func generateEnumCode(m EnumTypeMap, pkg string, enable_json bool, enable_bson b
 	}
 	sorted_list.Sort()
 
-	code += generateHeader(pkg, enable_json, enable_bson, has_assoc)
+	code += generateHeader(pkg, enable_bson, enable_json, has_assoc)
 
 	for _, enum_name := range sorted_list {
 		if m[enum_name].Constraint == nil {
-			code += generateEnumType(enum_name, m[enum_name], enable_json, enable_bson)
+			code += generateEnumType(enum_name, enable_bson, m[enum_name], enable_json)
 		} else {
 			code += generateAssocEnumType(enum_name, m[enum_name], enable_json, enable_bson)
 		}
@@ -384,9 +435,12 @@ func main() {
 	flag.BoolVar(&enable_json, "enable-json", false,
 		"Enable generation of JSON code")
 
-	var enable_bson bool = false
-	flag.BoolVar(&enable_bson, "enable-bson", false,
-		"Enable generation of BSON code")
+	var enable_bson string
+	flag.StringVar(&enable_bson, "enable-bson", "mgo", "Enable generation of BSON code for mongo drivers: mgo or mongodriver")
+	if enable_bson != "mgo" && enable_bson != "mongodriver" {
+		fmt.Fprintln(os.Stderr, errors.New("unsupported type of mongo driver"))
+		return
+	}
 
 	var package_name string
 	flag.StringVar(&package_name, "package", "main",
