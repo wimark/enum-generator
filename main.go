@@ -159,7 +159,7 @@ func (en *%type) SetBSON(v bson.Raw) error {
 		return nil
 	}
 	var data_raw, data_found = in["data"]
-	if bytes.Equal(data_raw.Value, []byte("null")) {
+	if bytes.Equal(data_raw.Data, []byte("null")) {
 		data_found = false
 	}
 	var t %constr
